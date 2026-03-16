@@ -1,28 +1,26 @@
 import type { TableProps } from 'antd';
 import { Button, Input, Layout, Popconfirm, Space, Table } from 'antd';
-import React, { useState } from 'react';
-import { EditableCell, EditableRow } from './EditableCompnents';
+import React, { useContext } from 'react';
+import { EditableCell, EditableRow } from './editableCompnents';
 import './index.less';
+import { VarTblEditorContext, type DataType, type tblEditorStoreType } from './store';
 
 const { Header, Content, Sider } = Layout;
 const { TextArea } = Input;
 
-interface DataType {
-  index: number;
-  name: string;
-  dataType: string;
-  defaulValue: string;
-  comment: string;
-}
-
 type ColumnTypes = Exclude<TableProps<DataType>['columns'], undefined>;
 
 const VariableTableEditor: React.FC = () => {
-  const [dataSource, setDataSource] = useState<DataType[]>([]);
+  // const [tableData, setTableData] = useState<DataType[]>([]);
+  const { tblEditorStore, tblEditStoreDispatch } = useContext(VarTblEditorContext);
+  const { tableData } = tblEditorStore as tblEditorStoreType;
+  const setTableData = (newData: DataType[]) => {
+    tblEditStoreDispatch({ type: 'tableData', data: newData });
+  };
 
   const handleDelete = (name: React.Key) => {
-    const newData = dataSource.filter((item) => item.name !== name);
-    setDataSource(newData);
+    const newData = tableData.filter((item) => item.name !== name);
+    setTableData(newData);
   };
 
   const defaultColumns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string })[] = [
@@ -64,7 +62,7 @@ const VariableTableEditor: React.FC = () => {
       width: 100,
       align: "center",
       render: (_, record) =>
-        dataSource.length >= 1 ? (
+        tableData.length >= 1 ? (
           <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.name)}>
             <a>Delete</a>
           </Popconfirm>
@@ -74,24 +72,24 @@ const VariableTableEditor: React.FC = () => {
 
   const handleAdd = () => {
     const newData: DataType = {
-      index: dataSource.length + 1,
+      index: tableData.length + 1,
       name: "",
-      dataType: '',
+      dataType: "",
       defaulValue: "",
       comment: "",
     };
-    setDataSource([...dataSource, newData]);
+    setTableData([...tableData, newData]);
   };
 
   const handleSave = (row: DataType) => {
-    const newData = [...dataSource];
+    const newData = [...tableData];
     const index = newData.findIndex((item) => row.name === item.name);
     const item = newData[index];
     newData.splice(index, 1, {
       ...item,
       ...row,
     });
-    setDataSource(newData);
+    setTableData(newData);
   };
 
   const components = {
@@ -122,16 +120,16 @@ const VariableTableEditor: React.FC = () => {
       <Layout className='left-box'>
         <Header>
           <Button onClick={handleAdd} type="primary" style={{ marginBottom: 8 }}>
-            Add a row
+            Add
           </Button>
         </Header>
         <Content className='table-content'>
           <Table<DataType>
             components={components}
-            rowKey={"name"}
+            rowKey={"index"}
             rowClassName={() => 'editable-row'}
             bordered
-            dataSource={dataSource}
+            dataSource={tableData}
             columns={columns as ColumnTypes}
             pagination={false}
           />
@@ -145,7 +143,7 @@ const VariableTableEditor: React.FC = () => {
         <TextArea autoSize={{ minRows: 5 }} />
       </Sider>
     </Layout>
-  );
+  )
 };
 
 export default VariableTableEditor;
