@@ -18,8 +18,11 @@ const VariableTableEditor: React.FC = () => {
     tblEditStoreDispatch({ type: 'tableData', data: newData });
   };
 
-  const handleDelete = (name: React.Key) => {
-    const newData = tableData.filter((item) => item.name !== name);
+  const handleDelete = (index: React.Key) => {
+    const newData = tableData.filter((row) => row.index !== index).map((row, i) => ({
+      ...row,
+      index: i + 1,
+    }))
     setTableData(newData);
   };
 
@@ -63,7 +66,7 @@ const VariableTableEditor: React.FC = () => {
       align: "center",
       render: (_, record) =>
         tableData.length >= 1 ? (
-          <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.name)}>
+          <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.index)}>
             <a>Delete</a>
           </Popconfirm>
         ) : null,
