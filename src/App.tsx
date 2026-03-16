@@ -1,10 +1,12 @@
-import { useState } from 'react'
 import './App.css'
+import VariableTableEditor from './components/VariableTableEditor'
 
 function App() {
 
   return (
-    <div>hello world</div>
+    <div className="app">
+      <VariableTableEditor></VariableTableEditor>
+    </div>
   )
 }
 
