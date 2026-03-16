@@ -6,7 +6,7 @@ export interface DataType {
   index: number;
   name: string;
   dataType: string;
-  defaulValue: string;
+  defaultValue: string;
   comment: string;
 }
 

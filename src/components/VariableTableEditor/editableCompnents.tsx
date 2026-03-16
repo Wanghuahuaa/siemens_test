@@ -100,6 +100,7 @@ export const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> 
       childNode = <div
         className="editable-cell-value-wrap"
         style={{ paddingInlineEnd: 24 }}
+        title={record[dataIndex]?.toString()}
         onClick={toggleEdit}
       >
         {children}

@@ -1,7 +1,7 @@
 import type { TableProps } from 'antd';
 import { Button, Input, Layout, message, Popconfirm, Select, Space, Table } from 'antd';
 import React, { useContext } from 'react';
-import { dataTypeEnum } from './const';
+import { dataTypeEnum, parseVarDefinitions } from './const';
 import { EditableCell, EditableRow, type EditableCellProps } from './editableCompnents';
 import './index.less';
 import { VarTblEditorContext, type DataType, type tblEditorStoreType } from './store';
@@ -14,6 +14,7 @@ type ColumnTypes = Exclude<TableProps<DataType>['columns'], undefined>;
 const VariableTableEditor: React.FC = () => {
   // const [tableData, setTableData] = useState<DataType[]>([]);
   const { tblEditorStore, tblEditStoreDispatch } = useContext(VarTblEditorContext);
+  const [inputValue, setInputValue] = React.useState("");
   const { tableData } = tblEditorStore as tblEditorStoreType;
   const setTableData = (newData: DataType[]) => {
     tblEditStoreDispatch({ type: 'tableData', data: newData });
@@ -32,7 +33,7 @@ const VariableTableEditor: React.FC = () => {
     {
       title: 'Index',
       dataIndex: 'index',
-      width: 100,
+      width: 90,
       align: "center",
       render: (value) => value,
     },
@@ -63,9 +64,9 @@ const VariableTableEditor: React.FC = () => {
       align: "center",
       editRule: (newValue, record, newRecord) => {
         if (newValue === dataTypeEnum.BOOL) {
-          newRecord.defaulValue = "TRUE";
+          newRecord.defaultValue = "TRUE";
         } else if (newValue === dataTypeEnum.INT) {
-          newRecord.defaulValue = "0";
+          newRecord.defaultValue = "0";
         }
       },
       editPorps: {
@@ -80,21 +81,21 @@ const VariableTableEditor: React.FC = () => {
     },
     {
       title: 'Defaul Value',
-      dataIndex: 'defaulValue',
+      dataIndex: 'defaultValue',
       editable: true,
-      width: 100,
+      width: 120,
       editRule: (newValue, record, newRecord) => {
         if (record.dataType === dataTypeEnum.BOOL) {
           const val = newValue?.trim()?.toUpperCase();
           if (val !== "TRUE" && val !== "FALSE") {
             message.warning("Default Value must be TRUE or FALSE!");
-            newRecord.defaulValue = record.defaulValue;
+            newRecord.defaultValue = record.defaultValue;
           }
         } else if (record.dataType === dataTypeEnum.INT) {
           // 限制输入为整数，且范围在 -21474483648 到 2147483647 之间
           // 输入为空
           if (newValue === '' || newValue === null || newValue === undefined) {
-            newRecord.defaulValue = '0'
+            newRecord.defaultValue = '0'
             return
           }
           const MIN = -2147483648;
@@ -102,15 +103,15 @@ const VariableTableEditor: React.FC = () => {
           const num = Number(newValue);
           if (isNaN(num) || !Number.isInteger(num)) {
             message.warning("Default Value must be an integer!");
-            newRecord.defaulValue = '0'
+            newRecord.defaultValue = '0'
             return
           }
           if (num < MIN || num > MAX) {
             message.warning("Default Value must be between -2147483648 and 2147483647!");
-            newRecord.defaulValue = '0'
+            newRecord.defaultValue = '0'
             return
           }
-          newRecord.defaulValue = Number(newValue) + ""
+          newRecord.defaultValue = Number(newValue) + ""
         }
       },
     },
@@ -139,7 +140,7 @@ const VariableTableEditor: React.FC = () => {
       index: tableData.length + 1,
       name: "",
       dataType: "",
-      defaulValue: "",
+      defaultValue: "",
       comment: "",
     };
     setTableData([...tableData, newData]);
@@ -155,6 +156,7 @@ const VariableTableEditor: React.FC = () => {
     });
     setTableData(newData);
   };
+
 
   const components = {
     body: {
@@ -181,6 +183,14 @@ const VariableTableEditor: React.FC = () => {
     };
   });
 
+  function handleImport() {
+    const res = parseVarDefinitions(inputValue);
+    setTableData(res)
+  }
+
+  function handleExport() {
+  }
+
   return (
     <Layout className='variable-table-editor' hasSider>
       <Layout className='left-box'>
@@ -203,10 +213,10 @@ const VariableTableEditor: React.FC = () => {
       </Layout>
       <Sider width={300} className='right-box'>
         <Space size={8} style={{ marginBottom: 8 }}>
-          <Button>Import</Button>
-          <Button>Export</Button>
+          <Button onClick={handleImport}>Import</Button>
+          <Button onClick={handleExport}>Export</Button>
         </Space>
-        <TextArea autoSize={{ minRows: 5 }} />
+        <TextArea autoSize={{ minRows: 5 }} value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
       </Sider>
     </Layout>
   )
