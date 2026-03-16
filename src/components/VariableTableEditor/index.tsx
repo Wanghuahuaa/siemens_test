@@ -1,8 +1,11 @@
 import type { TableProps } from 'antd';
-import { Button, Popconfirm, Table } from 'antd';
+import { Button, Input, Layout, Popconfirm, Space, Table } from 'antd';
 import React, { useState } from 'react';
 import { EditableCell, EditableRow } from './EditableCompnents';
 import './index.less';
+
+const { Header, Content, Sider } = Layout;
+const { TextArea } = Input;
 
 interface DataType {
   index: number;
@@ -115,20 +118,33 @@ const VariableTableEditor: React.FC = () => {
   });
 
   return (
-    <div className='variable-table-editor'>
-      <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16 }}>
-        Add a row
-      </Button>
-      <Table<DataType>
-        components={components}
-        rowKey={"name"}
-        rowClassName={() => 'editable-row'}
-        bordered
-        dataSource={dataSource}
-        columns={columns as ColumnTypes}
-        pagination={false}
-      />
-    </div>
+    <Layout className='variable-table-editor' hasSider>
+      <Layout className='left-box'>
+        <Header>
+          <Button onClick={handleAdd} type="primary" style={{ marginBottom: 8 }}>
+            Add a row
+          </Button>
+        </Header>
+        <Content className='table-content'>
+          <Table<DataType>
+            components={components}
+            rowKey={"name"}
+            rowClassName={() => 'editable-row'}
+            bordered
+            dataSource={dataSource}
+            columns={columns as ColumnTypes}
+            pagination={false}
+          />
+        </Content>
+      </Layout>
+      <Sider width={300} className='right-box'>
+        <Space size={8} style={{ marginBottom: 8 }}>
+          <Button>Import</Button>
+          <Button>Export</Button>
+        </Space>
+        <TextArea autoSize={{ minRows: 5 }} />
+      </Sider>
+    </Layout>
   );
 };
 
