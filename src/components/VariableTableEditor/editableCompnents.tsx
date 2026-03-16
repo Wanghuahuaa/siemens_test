@@ -80,7 +80,7 @@ export const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> 
   let childNode = children;
 
   if (editable) {
-    if (childNode = editing) {
+    if (editing) {
       const { InputComp, inputProps } = editPorps || {};
       const InputNode = InputComp || Input
       // let inputNode = <Input ref={inputRef} onPressEnter={save} onBlur={save} {...inputProps}/>

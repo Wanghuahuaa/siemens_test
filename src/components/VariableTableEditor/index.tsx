@@ -83,6 +83,36 @@ const VariableTableEditor: React.FC = () => {
       dataIndex: 'defaulValue',
       editable: true,
       width: 100,
+      editRule: (newValue, record, newRecord) => {
+        if (record.dataType === dataTypeEnum.BOOL) {
+          const val = newValue?.trim()?.toUpperCase();
+          if (val !== "TRUE" && val !== "FALSE") {
+            message.warning("Default Value must be TRUE or FALSE!");
+            newRecord.defaulValue = record.defaulValue;
+          }
+        } else if (record.dataType === dataTypeEnum.INT) {
+          // 限制输入为整数，且范围在 -21474483648 到 2147483647 之间
+          // 输入为空
+          if (newValue === '' || newValue === null || newValue === undefined) {
+            newRecord.defaulValue = '0'
+            return
+          }
+          const MIN = -2147483648;
+          const MAX = 2147483647;
+          const num = Number(newValue);
+          if (isNaN(num) || !Number.isInteger(num)) {
+            message.warning("Default Value must be an integer!");
+            newRecord.defaulValue = '0'
+            return
+          }
+          if (num < MIN || num > MAX) {
+            message.warning("Default Value must be between -2147483648 and 2147483647!");
+            newRecord.defaulValue = '0'
+            return
+          }
+          newRecord.defaulValue = Number(newValue) + ""
+        }
+      },
     },
     {
       title: 'Comment',
