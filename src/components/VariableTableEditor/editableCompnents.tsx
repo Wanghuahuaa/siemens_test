@@ -1,15 +1,9 @@
 import type { GetRef, InputRef } from 'antd';
 import { Form, Input } from "antd";
 import React, { useContext, useEffect, useRef, useState } from 'react';
+import type { DataType } from './store';
 
 type FormInstance<T> = GetRef<typeof Form<T>>;
-
-interface Item {
-  key: string;
-  name: string;
-  age: string;
-  address: string;
-}
 
 interface EditableRowProps {
   index: number;
@@ -31,9 +25,10 @@ export const EditableRow: React.FC<EditableRowProps> = ({ index, ...props }) => 
 interface EditableCellProps {
   title: React.ReactNode;
   editable: boolean;
-  dataIndex: keyof Item;
-  record: Item;
-  handleSave: (record: Item) => void;
+  dataIndex: keyof DataType;
+  record: DataType;
+  handleSave: (record: DataType) => void;
+  editRule?: (newValue: any, record: DataType) => any
 }
 
 export const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
@@ -43,11 +38,14 @@ export const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> 
   dataIndex,
   record,
   handleSave,
+  editRule,
   ...restProps
 }) => {
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<InputRef>(null);
   const form = useContext(EditableContext)!;
+
+  if (dataIndex === "name") console.log(28, restProps)
 
   useEffect(() => {
     if (editing) {
@@ -64,6 +62,9 @@ export const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> 
     try {
       const values = await form.validateFields();
       toggleEdit();
+      if (editRule) {
+        values[dataIndex] = editRule(values[dataIndex], record);
+      }
       handleSave({ ...record, ...values });
     } catch (errInfo) {
       console.log('Save failed:', errInfo);
@@ -77,7 +78,7 @@ export const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> 
       <Form.Item
         style={{ margin: 0 }}
         name={dataIndex}
-        rules={[{ required: true, message: `${title} is required.` }]}
+      // rules={[{ required: true, message: `${title} is required.` }]}
       >
         <Input ref={inputRef} onPressEnter={save} onBlur={save} />
       </Form.Item>

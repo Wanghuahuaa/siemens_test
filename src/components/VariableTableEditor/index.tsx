@@ -1,5 +1,5 @@
 import type { TableProps } from 'antd';
-import { Button, Input, Layout, Popconfirm, Space, Table } from 'antd';
+import { Button, Input, Layout, message, Popconfirm, Space, Table } from 'antd';
 import React, { useContext } from 'react';
 import { EditableCell, EditableRow } from './editableCompnents';
 import './index.less';
@@ -26,7 +26,7 @@ const VariableTableEditor: React.FC = () => {
     setTableData(newData);
   };
 
-  const defaultColumns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string })[] = [
+  const defaultColumns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string, editRule?: (newValue: any, record: DataType) => any })[] = [
     {
       title: 'Index',
       dataIndex: 'index',
@@ -39,6 +39,19 @@ const VariableTableEditor: React.FC = () => {
       dataIndex: 'name',
       width: 100,
       editable: true,
+      editRule: (newValue, record) => {
+        // 输入为空重置为上次的值
+        if (!newValue?.trim()) {
+          message.warning("Name is required!");
+          return record.name
+        }
+        // name重复时重置为上次的值
+        if (tableData.some(item => item.name.toLowerCase() === newValue.toLowerCase() && item.index !== record.index)) {
+          message.warning("Name must be unique!");
+          return record.name
+        }
+        return newValue;
+      },
     },
     {
       title: 'Data Type',
@@ -86,9 +99,9 @@ const VariableTableEditor: React.FC = () => {
 
   const handleSave = (row: DataType) => {
     const newData = [...tableData];
-    const index = newData.findIndex((item) => row.name === item.name);
-    const item = newData[index];
-    newData.splice(index, 1, {
+    const rowIndex = newData.findIndex((item) => row.index === item.index);
+    const item = newData[rowIndex];
+    newData.splice(rowIndex, 1, {
       ...item,
       ...row,
     });
@@ -114,6 +127,7 @@ const VariableTableEditor: React.FC = () => {
         dataIndex: col.dataIndex,
         title: col.title,
         handleSave,
+        editRule: col.editRule,
       }),
     };
   });
