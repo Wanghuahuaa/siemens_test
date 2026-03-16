@@ -1,7 +1,7 @@
 import type { TableProps } from 'antd';
 import { Button, Input, Layout, message, Popconfirm, Select, Space, Table } from 'antd';
 import React, { useContext } from 'react';
-import { dataTypeEnum, parseVarDefinitions } from './const';
+import { dataTypeEnum, parseVarDefinitions, stringifyVarDefinitions } from './const';
 import { EditableCell, EditableRow, type EditableCellProps } from './editableCompnents';
 import './index.less';
 import { VarTblEditorContext, type DataType, type tblEditorStoreType } from './store';
@@ -189,6 +189,8 @@ const VariableTableEditor: React.FC = () => {
   }
 
   function handleExport() {
+    const res = stringifyVarDefinitions(tableData);
+    setInputValue(res)
   }
 
   return (

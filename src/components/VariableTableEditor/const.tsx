@@ -6,6 +6,7 @@ export const dataTypeEnum = {
     INT: 'INT',
 } as const;
 
+const defaultByType: Record<string, string> = { BOOL: 'TRUE', INT: '0' };
 
 /**
  * 解析 VAR...END_VAR 格式的变量定义文本，提取标准化的变量信息
@@ -24,8 +25,6 @@ export const parseVarDefinitions = (text: string): DataType[] => {
         .split(/\r?\n/) // 支持 Windows/Unix 换行
         .map(line => line.trim())
         .filter(line => line !== '') || [];
-
-    const defaultByType: Record<string, string> = { BOOL: 'TRUE', INT: '0' };
 
     const res: DataType[] = [];
     for (let index = 0; index < lines.length; index += 1) {
@@ -78,7 +77,6 @@ export const parseVarDefinitions = (text: string): DataType[] => {
     return res;
 }
 
-
 // 示例用法（测试你的变量文本）
 // ------------------------------
 // const inputText = `VAR
@@ -94,3 +92,37 @@ export const parseVarDefinitions = (text: string): DataType[] => {
 // console.log('解析后的变量信息：');
 // console.table(parsedVariables);
 
+/**
+ * 将变量数组转换回 VAR...END_VAR 格式的文本
+ * @param vars - 变量数组
+ * @returns 格式化后的变量定义文本
+ */
+export const stringifyVarDefinitions = (vars: DataType[]): string => {
+
+    const lines: string[] = ['VAR'];
+
+    for (const item of vars) {
+        const type = (item.dataType || '').toUpperCase();
+        const name = item.name || '';
+
+        let defaultValue = item.defaultValue || '';
+        if (!defaultValue) {
+            defaultValue = defaultByType[type] ?? '';
+        } else if (type === dataTypeEnum.BOOL) {
+            defaultValue = defaultValue.toUpperCase();
+        }
+
+        const parts: string[] = [];
+        if (name) parts.push(name);
+        if (type) parts.push(`: ${type}`);
+        if (defaultValue) parts.push(`:= ${defaultValue}`);
+
+        const core = parts.join(' ');
+        const comment = item.comment ? ` // ${item.comment}` : '';
+
+        lines.push(core ? `    ${core};${comment}` : `;${comment}`);
+    }
+
+    lines.push('END_VAR');
+    return lines.join('\n');
+};
