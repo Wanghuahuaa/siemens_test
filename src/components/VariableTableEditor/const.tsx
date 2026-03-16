@@ -1,3 +1,4 @@
+import { message } from "antd";
 import type { DataType } from "./store";
 
 export const dataTypeEnum = {
@@ -26,46 +27,52 @@ export const parseVarDefinitions = (text: string): DataType[] => {
 
     const defaultByType: Record<string, string> = { BOOL: 'TRUE', INT: '0' };
 
-    const res: DataType[] = lines
-        .map((line, index) => {
-            // 3. 去除行首的注释标记（例如：//）
-            const noPrefix = line.replace(/^\/\//, '').trim();
+    const res: DataType[] = [];
+    for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index];
 
-            // 4. 抽取行内注释（例如：... // comment）
-            const [variablePart, commentPart = ''] = noPrefix.split(/\/\//, 2).map(str => str.trim());
+        // 3. 去除行首的注释标记（例如：//）
+        const noPrefix = line.replace(/^\/\//, '').trim();
 
-            // 5. 去掉行尾的分号
-            const core = variablePart.replace(/;$/, '').trim();
-            if (!core) return {
-                index: index + 1,
-                name: "",
-                dataType: "",
-                defaultValue: "",
-                comment: "",
-            };
+        // 4. 抽取行内注释（例如：... // comment）
+        const [variablePart, commentPart = ''] = noPrefix.split(/\/\//, 2).map(str => str.trim());
 
-            // 6. 解析变量定义（name : TYPE := DEFAULT）
-            const [nameTypePart, rawDefault = ''] = core.split(':=').map(s => s.trim());
-            const [name = '', rawType = ''] = nameTypePart.split(':').map(s => s.trim());
+        // 5. 去掉行尾的分号
+        const core = variablePart.replace(/;$/, '').trim();
+        if (!core) continue;
 
-            const type = rawType.toUpperCase();
+        // 6. 解析变量定义（name : TYPE := DEFAULT）
+        const [nameTypePart, rawDefault = ''] = core.split(':=').map(s => s.trim());
+        const [name = '', rawType = ''] = nameTypePart.split(':').map(s => s.trim());
 
-            // 7. 默认值处理
-            let defaultValue = rawDefault;
-            if (!defaultValue) {
-                defaultValue = defaultByType[type] ?? '未定义';
-            } else if (type === 'BOOL') {
-                defaultValue = defaultValue.toUpperCase();
-            }
+        const type = rawType.toUpperCase();
 
-            return {
-                index: index + 1,
-                name: name || "",
-                dataType: type || "",
-                defaultValue: defaultValue || "",
-                comment: commentPart || "",
-            };
-        })
+        if (!type) {
+            message.warning(`Format error, cannot parse`);
+            return [];
+        }
+
+        if (!(type in dataTypeEnum)) {
+            message.warning(`Unsupported data type: ${type}`);
+            return [];
+        }
+
+        // 7. 默认值处理
+        let defaultValue = rawDefault;
+        if (!defaultValue) {
+            defaultValue = defaultByType[type] ?? '';
+        } else if (type === dataTypeEnum.BOOL) {
+            defaultValue = defaultValue.toUpperCase();
+        }
+
+        res.push({
+            index: index + 1,
+            name: name,
+            dataType: type || "",
+            defaultValue: defaultValue,
+            comment: commentPart,
+        });
+    }
     // .filter(Boolean) as Array<{ name: string; dataType: string; defaultValue: string; comment: string }>;
 
     return res;
@@ -78,6 +85,8 @@ export const parseVarDefinitions = (text: string): DataType[] => {
 // isReady : BOOL := TRUE; // System ready flag
 // counter : INT := 0; // Counter
 // temperature : INT;
+//  temperature  INT 9;
+// isReady : String := "test"
 // END_VAR`;
 
 // // 解析并打印结果
