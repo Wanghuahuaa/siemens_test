@@ -1,7 +1,8 @@
 import type { TableProps } from 'antd';
-import { Button, Input, Layout, message, Popconfirm, Space, Table } from 'antd';
+import { Button, Input, Layout, message, Popconfirm, Select, Space, Table } from 'antd';
 import React, { useContext } from 'react';
-import { EditableCell, EditableRow } from './editableCompnents';
+import { dataTypeEnum } from './const';
+import { EditableCell, EditableRow, type EditableCellProps } from './editableCompnents';
 import './index.less';
 import { VarTblEditorContext, type DataType, type tblEditorStoreType } from './store';
 
@@ -26,7 +27,8 @@ const VariableTableEditor: React.FC = () => {
     setTableData(newData);
   };
 
-  const defaultColumns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string, editRule?: (newValue: any, record: DataType) => any })[] = [
+  // const defaultColumns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string, editRule?: (newValue: any, record: DataType) => any; })[] = [
+  const defaultColumns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string } & Pick<EditableCellProps, 'editRule' | 'editPorps'>)[] = [
     {
       title: 'Index',
       dataIndex: 'index',
@@ -39,18 +41,18 @@ const VariableTableEditor: React.FC = () => {
       dataIndex: 'name',
       width: 100,
       editable: true,
-      editRule: (newValue, record) => {
+      editRule: (newValue, record, newRecord) => {
         // 输入为空重置为上次的值
         if (!newValue?.trim()) {
           message.warning("Name is required!");
-          return record.name
+          newRecord.name = record.name;
+          return
         }
         // name重复时重置为上次的值
         if (tableData.some(item => item.name.toLowerCase() === newValue.toLowerCase() && item.index !== record.index)) {
           message.warning("Name must be unique!");
-          return record.name
+          newRecord.name = record.name;
         }
-        return newValue;
       },
     },
     {
@@ -59,6 +61,22 @@ const VariableTableEditor: React.FC = () => {
       editable: true,
       width: 100,
       align: "center",
+      editRule: (newValue, record, newRecord) => {
+        if (newValue === dataTypeEnum.BOOL) {
+          newRecord.defaulValue = "TRUE";
+        } else if (newValue === dataTypeEnum.INT) {
+          newRecord.defaulValue = "0";
+        }
+      },
+      editPorps: {
+        InputComp: Select,
+        inputProps: {
+          options: [
+            { label: dataTypeEnum.BOOL, value: dataTypeEnum.BOOL },
+            { label: dataTypeEnum.INT, value: dataTypeEnum.INT },
+          ],
+        }
+      }
     },
     {
       title: 'Defaul Value',
@@ -128,6 +146,7 @@ const VariableTableEditor: React.FC = () => {
         title: col.title,
         handleSave,
         editRule: col.editRule,
+        editPorps: col.editPorps
       }),
     };
   });
